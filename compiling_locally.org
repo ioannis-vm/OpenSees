@@ -1,0 +1,17 @@
+#+begin_src bash
+
+  export CC=$(which mpicc)
+  export CXX=$(which mpicxx)
+  export FC=$(which mpif90)
+
+  git clone --depth 1 https://github.com/OpenSees/mumps.git
+  cd mumps
+  mkdir build
+  cd build
+
+  cmake .. -DMUMPS_DIR=$PWD/../../mumps/build -DSCALAPACK_LIBRARIES=/usr/lib/libscalapack.so -DCMAKE_BUILD_TYPE=Debug
+
+  cmake --build . --target OpenSees --parallel $(nproc)
+  cmake --build . --target OpenSeesPy --parallel $(nproc)
+
+#+end_src

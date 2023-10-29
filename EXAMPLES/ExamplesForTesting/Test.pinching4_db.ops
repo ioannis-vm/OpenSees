@@ -1,0 +1,181 @@
+# Script used to test the implementation of
+# Pinching4Material::sendSelf and Pinching4Material::recvSelf
+# 
+# August 17, 2023
+# 
+# John Vouvakis Manousakis
+# UC Berkeley
+
+# Step 1: An analysis without invoking the DataBase commands.
+
+wipe
+
+model basic -ndm 1 -ndf 1
+
+node 101 0.00
+node 102 0.00
+fix 101 1
+
+set matTag 501
+
+set M_p 50.00
+set gap 0.02
+set M_max_pos [expr 0.35* $M_p];
+set M_max_neg [expr 0.49*0.35* $M_p];
+set M1_P [expr 0.250 * $M_max_pos]; set M1_N [expr -1.000 * $M_max_neg];
+set M2_P [expr 1.000 * $M_max_pos]; set M2_N [expr -1.001 * $M_max_neg];
+set M3_P [expr 1.001 * $M_max_pos]; set M3_N [expr -2.353 * $M_max_neg]; 
+set M4_P [expr 0.530 * $M_max_pos]; set M4_N [expr -2.350 * $M_max_neg]; 
+set Th_1_P 0.0042; set Th_1_N -0.0080;
+set Th_2_P 0.0200; set Th_2_N [expr -1.0 * $gap];
+set Th_3_P 0.0390; set Th_3_N [expr -1.0 * $gap - 0.015];
+set Th_4_P 0.0400; set Th_4_N [expr -1.0 * $gap - 0.040];
+set rDispP  0.40; set rDispN  0.50;
+set rForceP 0.13; set rForceN 0.53;
+set uForceP 0.01; set uForceN 0.05;
+set gK1 0.0; set gD1 0.0; set gF1 0.0;
+set gK2 0.0; set gD2 0.0; set gF2 0.0;
+set gK3 0.0; set gD3 0.0; set gF3 0.0;
+set gK4 0.0; set gD4 0.0; set gF4 0.0;
+set gKLim 0.30; set gDLim 0.05; set gFLim 0.05;
+set gE 10;
+set dmgType "energy";
+set Th_U_P  [expr   $gap + 0.040];
+set Th_U_N  [expr  -$gap - 0.040];
+
+# uniaxialMaterial Elastic $matTag 100.00
+# uniaxialMaterial Steel02 $matTag 20.00 1000.00 0.001
+uniaxialMaterial Pinching4 $matTag $M1_P $Th_1_P $M2_P $Th_2_P $M3_P $Th_3_P $M4_P $Th_4_P $M1_N $Th_1_N $M2_N $Th_2_N $M3_N $Th_3_N $M4_N $Th_4_N $rDispP $rForceP $uForceP $rDispN $rForceN $uForceN $gK1 $gK2 $gK3 $gK4 $gKLim $gD1 $gD2 $gD3 $gD4 $gDLim $gF1 $gF2 $gF3 $gF4 $gFLim $gE $dmgType;
+# Thanks to
+# https://github.com/amaelkady/OpenSEES_Models_SMF/blob/master/Models%20and%20Tcl%20Files/Spring_Pinching.tcl
+
+element zeroLength 201 101 102 -mat 501 -dir 1
+
+pattern Plain 2010 Linear {
+    load 102 1.00
+}
+
+system UmfPack
+numberer Plain
+constraints Plain
+
+recorder Element -file "/tmp/out_defo_nodb" -ele 201 material 1 strain
+recorder Element -file "/tmp/out_force_nodb" -ele 201 material 1 stress
+
+set rotations {
+0.00 0.005 0.010 0.015 0.020 0.03
+0.025 0.020 0.010 0.00 -0.02
+-0.01 0.00 0.02 0.04
+}
+
+for {set i 0} {$i < [expr {[llength $rotations] - 1}]} {incr i} {
+    set increment [expr {[lindex $rotations [expr {$i + 1}]] - [lindex $rotations $i]}]
+    test "NormDispIncr" 1e-6 5000 0
+    algorithm "Newton"
+    integrator "DisplacementControl" 102 1 $increment
+    analysis "Static"
+    set flag [analyze 1]
+    if {$flag != 0} {
+	puts $i
+	break
+    }
+}
+
+set rotations {
+0.04 0.02 0.01 0.00 -0.02 -0.005 0.005 0.00
+}
+
+for {set i 0} {$i < [expr {[llength $rotations] - 1}]} {incr i} {
+    set increment [expr {[lindex $rotations [expr {$i + 1}]] - [lindex $rotations $i]}]
+    test "NormDispIncr" 1e-6 5000 0
+    algorithm "Newton"
+    integrator "DisplacementControl" 102 1 $increment
+    analysis "Static"
+    set flag [analyze 1]
+    if {$flag != 0} {
+	puts $i
+	break
+    }
+}
+
+
+# Step 2: An analysis invoking the DataBase commands.
+
+wipe
+
+model basic -ndm 1 -ndf 1
+
+node 101 0.00
+node 102 0.00
+fix 101 1
+
+# uniaxialMaterial Elastic $matTag 100.00
+# uniaxialMaterial Steel02 $matTag 20.00 1000.00 0.001
+uniaxialMaterial Pinching4 $matTag $M1_P $Th_1_P $M2_P $Th_2_P $M3_P $Th_3_P $M4_P $Th_4_P $M1_N $Th_1_N $M2_N $Th_2_N $M3_N $Th_3_N $M4_N $Th_4_N $rDispP $rForceP $uForceP $rDispN $rForceN $uForceN $gK1 $gK2 $gK3 $gK4 $gKLim $gD1 $gD2 $gD3 $gD4 $gDLim $gF1 $gF2 $gF3 $gF4 $gFLim $gE $dmgType;
+
+element zeroLength 201 101 102 -mat 501 -dir 1
+
+pattern Plain 2010 Linear {
+    load 102 1.00
+}
+
+
+system UmfPack
+numberer Plain
+constraints Plain
+
+recorder Element -file "/tmp/out_defo_db" -ele 201 material 1 strain
+recorder Element -file "/tmp/out_force_db" -ele 201 material 1 stress
+
+set rotations {
+0.00 0.005 0.010 0.015 0.020 0.03
+0.025 0.020 0.010 0.00 -0.02
+-0.01 0.00 0.02 0.04
+}
+
+for {set i 0} {$i < [expr {[llength $rotations] - 1}]} {incr i} {
+    set increment [expr {[lindex $rotations [expr {$i + 1}]] - [lindex $rotations $i]}]
+    test "NormDispIncr" 1e-6 5000 0
+    algorithm "Newton"
+    integrator "DisplacementControl" 102 1 $increment
+    analysis "Static"
+    set flag [analyze 1]
+    if {$flag != 0} {
+	puts $i
+	break
+    }
+}
+
+# save and then restore model state
+database File "/tmp/ops_database/opsdb"
+save 6040
+
+# Optional: wipe
+wipe
+database File "/tmp/ops_database/opsdb"
+
+restore 6040
+
+recorder Element -file "/tmp/out_defo_db" -ele 201 material 1 strain
+recorder Element -file "/tmp/out_force_db" -ele 201 material 1 stress
+
+system UmfPack
+numberer Plain
+constraints Plain
+
+set rotations {
+0.04 0.02 0.01 0.00 -0.02 -0.005 0.005 0.00
+}
+
+for {set i 0} {$i < [expr {[llength $rotations] - 1}]} {incr i} {
+    set increment [expr {[lindex $rotations [expr {$i + 1}]] - [lindex $rotations $i]}]
+    test "NormDispIncr" 1e-6 5000 0
+    algorithm "Newton"
+    integrator "DisplacementControl" 102 1 $increment
+    analysis "Static"
+    set flag [analyze 1]
+    if {$flag != 0} {
+	puts $i
+	break
+    }
+}
