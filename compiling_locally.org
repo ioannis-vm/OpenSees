@@ -14,4 +14,10 @@
   cmake --build . --target OpenSees --parallel $(nproc)
   cmake --build . --target OpenSeesPy --parallel $(nproc)
 
+  mv OpenSeesPy.so opensees.so
+
+  # backup pypi =opensees.so= if needed
+
+  cp opensees.so $HOME/micromamba/envs/osmg/lib/python3.9/site-packages/openseespylinux/
+
 #+end_src
