@@ -247,7 +247,7 @@ void MocInit2WayBalance(CtrlType *ctrl, GraphType *graph, float *tpwgts)
     if (AreAnyVwgtsBelow(ncon, 1.0, npwgts+from*ncon, 0.0, nvwgt, tpwgts[from]))
       break;
 
-    if ((cnum = SelectQueueOneWay(ncon, npwgts, tpwgts, from, parts)) == -1)
+    if ((cnum = SelectQueueoneWay(ncon, npwgts, tpwgts, from, parts)) == -1)
       break;
 
     if ((higain = PQueueGetMax(&parts[cnum][0])) == -1)
