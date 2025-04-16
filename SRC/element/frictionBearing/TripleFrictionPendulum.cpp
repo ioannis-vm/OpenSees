@@ -488,7 +488,7 @@ int TripleFrictionPendulum::update()
             theMaterials[0]->setTrialStrain(DzOld, 0.0);
             Kvert = Kvt;
         }
-        Fvert = -MinFv;
+        Fvert = -MinFv + Kvt * Dz;
     }
     Wcr = -Fvert;
     
