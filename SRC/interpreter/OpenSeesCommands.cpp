@@ -1420,7 +1420,7 @@ int OPS_System()
 	// now must determine the type of solver to create from rest of args
 	theSOE = (LinearSOE*)OPS_SymSparseLinSolver();
 
-    } else if (strcmp(type, "UmfPack") == 0 || strcmp(type, "Umfpack") == 0) {
+    } else if (strcmp(type, "UmfPack") == 0 || strcmp(type, "Umfpack") == 0 || strcmp(type, "umfpack") == 0) {
 
 	theSOE = (LinearSOE*)OPS_UmfpackGenLinSolver();
 
