@@ -20,6 +20,14 @@
 
 cmake_minimum_required(VERSION 3.16)
 project(OpenSeesFramework LANGUAGES C CXX Fortran)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+if(EXISTS "${CMAKE_BINARY_DIR}/conanbuildinfo.cmake")
+    include("${CMAKE_BINARY_DIR}/conanbuildinfo.cmake")
+    conan_basic_setup()
+else()
+    message(FATAL_ERROR "conanbuildinfo.cmake not found. Run 'conan install ..' before building.")
+endif()
 
 
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
@@ -58,14 +66,12 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
  set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
  set(BUILD_SHARED_LIBS OFF)
- set(CMAKE_EXE_LINKER_FLAGS "-static")
- add_compile_options(-fPIC)
+ # set(CMAKE_EXE_LINKER_FLAGS "-static")
  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
- set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
+ # set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
  MESSAGE("COMPILER: GNU")
 elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Intel") 
  MESSAGE("COMPILER: Intel")
- add_compile_options(-fPIC)
 elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "MSVC")
  MESSAGE("COMPILER: MSVC")
  set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib")
@@ -128,7 +134,6 @@ set_property(CACHE OPS_FINAL_TARGET PROPERTY STRINGS
 #
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
   add_compile_definitions(_LINUX _UNIX _TCL85)
   if (NOT_USING_CONAN)
     include(OpenSeesDependenciesUnix)
@@ -137,7 +142,6 @@ endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
   set(OPS_Use_Graphics_Option None)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
   add_compile_definitions(_LINUX _UNIX _TCL85)
   if (NOT_USING_CONAN)
     include(OpenSeesDependenciesUnix)
